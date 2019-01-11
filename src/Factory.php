@@ -13,8 +13,23 @@ use DirectoryIterator;
 
 class Factory
 {
-    public function makeDirectoryIterator(string $path): DirectoryIterator
+    public static function collector(): Collector
+    {
+        return new Collector(new self());
+    }
+
+    public function makeCollector(): Collector
+    {
+        return self::collector();
+    }
+
+    public static function directoryIterator(string $path): DirectoryIterator
     {
         return new DirectoryIterator($path);
+    }
+
+    public function makeDirectoryIterator(string $path): DirectoryIterator
+    {
+        return self::directoryIterator($path);
     }
 }
