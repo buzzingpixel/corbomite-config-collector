@@ -25,6 +25,48 @@ class Collector
         return $this->collect($extraKeyName);
     }
 
+    public function getExtraKeyAsArray(string $extraKeyName): array
+    {
+        if (! defined('APP_BASE_PATH')) {
+            throw new LogicException('APP_BASE_PATH must be defined');
+        }
+
+        $array = $this->getExtraKeyFromPath(APP_BASE_PATH, $extraKeyName);
+        $array = \is_array($array) ? $array : [];
+
+        $vendorIterator = $this->factory->makeDirectoryIterator(
+            APP_BASE_PATH . DIRECTORY_SEPARATOR . 'vendor'
+        );
+
+        foreach ($vendorIterator as $fileInfo) {
+            if ($fileInfo->isDot() || ! $fileInfo->isDir()) {
+                continue;
+            }
+
+            $providerIterator = $this->factory->makeDirectoryIterator(
+                $fileInfo->getPathname()
+            );
+
+            foreach ($providerIterator as $providerFileInfo) {
+                if ($providerFileInfo->isDot() ||
+                    ! $providerFileInfo->isDir()
+                ) {
+                    continue;
+                }
+
+                $thisArray = $this->getExtraKeyFromPath(
+                    $providerFileInfo->getPathname(),
+                    $extraKeyName
+                );
+                $thisArray = \is_array($thisArray) ? $thisArray : [];
+
+                $array = array_merge($array, $thisArray);
+            }
+        }
+
+        return $array;
+    }
+
     public function collect(string $extraKeyName): array
     {
         if (! defined('APP_BASE_PATH')) {
@@ -63,19 +105,27 @@ class Collector
         return $config;
     }
 
-    private function collectFromPath(string $path, string $extraKeyName): array
-    {
+    private function getExtraKeyFromPath(
+        string $path,
+        string $extraKeyName,
+        $default = null
+    ) {
         $composerJsonPath = $path . DIRECTORY_SEPARATOR . 'composer.json';
 
         if (! file_exists($composerJsonPath)) {
-            return [];
+            return null;
         }
 
         $json = json_decode(file_get_contents($composerJsonPath), true);
 
-        $filePath = isset($json['extra'][$extraKeyName]) ?
+        return isset($json['extra'][$extraKeyName]) ?
             $json['extra'][$extraKeyName] :
-            'asdf';
+            $default;
+    }
+
+    private function collectFromPath(string $path, string $extraKeyName): array
+    {
+        $filePath = $this->getExtraKeyFromPath($path, $extraKeyName, 'asdf');
 
         $configFilePath = $path . DIRECTORY_SEPARATOR . $filePath;
 
