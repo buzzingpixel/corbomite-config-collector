@@ -25,6 +25,56 @@ class Collector
         return $this->collect($extraKeyName);
     }
 
+    public function getPathsFromExtraKey(string $extraKeyName): array
+    {
+        if (! defined('APP_BASE_PATH')) {
+            throw new LogicException('APP_BASE_PATH must be defined');
+        }
+
+        $items = [];
+
+        $item = $this->getExtraKeyFromPath(APP_BASE_PATH, $extraKeyName);
+
+        if ($item) {
+            $items[] = APP_BASE_PATH . DIRECTORY_SEPARATOR . $item;
+        }
+
+        $vendorIterator = $this->factory->makeDirectoryIterator(
+            APP_BASE_PATH . DIRECTORY_SEPARATOR . 'vendor'
+        );
+
+        foreach ($vendorIterator as $fileInfo) {
+            if ($fileInfo->isDot() || ! $fileInfo->isDir()) {
+                continue;
+            }
+
+            $providerIterator = $this->factory->makeDirectoryIterator(
+                $fileInfo->getPathname()
+            );
+
+            foreach ($providerIterator as $providerFileInfo) {
+                if ($providerFileInfo->isDot() ||
+                    ! $providerFileInfo->isDir()
+                ) {
+                    continue;
+                }
+
+                $thisItem = $this->getExtraKeyFromPath(
+                    $providerFileInfo->getPathname(),
+                    $extraKeyName
+                );
+
+                if ($thisItem) {
+                    $items[] =$providerFileInfo->getPathname() .
+                        DIRECTORY_SEPARATOR .
+                        $thisItem;
+                }
+            }
+        }
+
+        return $items;
+    }
+
     public function getExtraKeyAsArray(string $extraKeyName): array
     {
         if (! defined('APP_BASE_PATH')) {
