@@ -155,7 +155,7 @@ class Collector
         return $config;
     }
 
-    private function getExtraKeyFromPath(
+    public function getExtraKeyFromPath(
         string $path,
         string $extraKeyName,
         $default = null
@@ -173,7 +173,7 @@ class Collector
             $default;
     }
 
-    private function collectFromPath(string $path, string $extraKeyName): array
+    public function collectFromPath(string $path, string $extraKeyName): array
     {
         $filePath = $this->getExtraKeyFromPath($path, $extraKeyName, 'asdf');
 
