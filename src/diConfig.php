@@ -7,7 +7,6 @@ declare(strict_types=1);
  * @license Apache-2.0
  */
 
-use corbomite\di\Di;
 use corbomite\configcollector\Factory;
 use corbomite\configcollector\Collector;
 
@@ -16,6 +15,6 @@ return [
         return new Factory();
     },
     Collector::class => function () {
-        return new Collector(Di::get(Factory::class));
+        return Factory::collector();
     },
 ];

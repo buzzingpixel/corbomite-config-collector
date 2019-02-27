@@ -9,13 +9,24 @@ declare(strict_types=1);
 
 namespace corbomite\configcollector;
 
+use ReflectionClass;
 use DirectoryIterator;
+use Composer\Autoload\ClassLoader;
 
 class Factory
 {
     public static function collector(): Collector
     {
-        return new Collector(new self());
+        if (defined('APP_BASE_PATH')) {
+            return new Collector(new Factory(), APP_BASE_PATH);
+        }
+
+        $reflection = new ReflectionClass(ClassLoader::class);
+
+        return new Collector(
+            new Factory(),
+            dirname($reflection->getFileName(), 3)
+        );
     }
 
     public function makeCollector(): Collector

@@ -9,15 +9,15 @@ declare(strict_types=1);
 
 namespace corbomite\configcollector;
 
-use LogicException;
-
 class Collector
 {
     private $factory;
+    private $appBasePath;
 
-    public function __construct(Factory $factory)
+    public function __construct(Factory $factory, string $appBasePath)
     {
         $this->factory = $factory;
+        $this->appBasePath = $appBasePath;
     }
 
     public function __invoke(string $extraKeyName): array
@@ -27,20 +27,16 @@ class Collector
 
     public function getPathsFromExtraKey(string $extraKeyName): array
     {
-        if (! defined('APP_BASE_PATH')) {
-            throw new LogicException('APP_BASE_PATH must be defined');
-        }
-
         $items = [];
 
-        $item = $this->getExtraKeyFromPath(APP_BASE_PATH, $extraKeyName);
+        $item = $this->getExtraKeyFromPath($this->appBasePath, $extraKeyName);
 
         if ($item) {
-            $items[] = APP_BASE_PATH . DIRECTORY_SEPARATOR . $item;
+            $items[] = $this->appBasePath . DIRECTORY_SEPARATOR . $item;
         }
 
         $vendorIterator = $this->factory->makeDirectoryIterator(
-            APP_BASE_PATH . DIRECTORY_SEPARATOR . 'vendor'
+            $this->appBasePath . DIRECTORY_SEPARATOR . 'vendor'
         );
 
         foreach ($vendorIterator as $fileInfo) {
@@ -77,15 +73,11 @@ class Collector
 
     public function getExtraKeyAsArray(string $extraKeyName): array
     {
-        if (! defined('APP_BASE_PATH')) {
-            throw new LogicException('APP_BASE_PATH must be defined');
-        }
-
-        $array = $this->getExtraKeyFromPath(APP_BASE_PATH, $extraKeyName);
+        $array = $this->getExtraKeyFromPath($this->appBasePath, $extraKeyName);
         $array = \is_array($array) ? $array : [];
 
         $vendorIterator = $this->factory->makeDirectoryIterator(
-            APP_BASE_PATH . DIRECTORY_SEPARATOR . 'vendor'
+            $this->appBasePath . DIRECTORY_SEPARATOR . 'vendor'
         );
 
         foreach ($vendorIterator as $fileInfo) {
@@ -119,14 +111,10 @@ class Collector
 
     public function collect(string $extraKeyName): array
     {
-        if (! defined('APP_BASE_PATH')) {
-            throw new LogicException('APP_BASE_PATH must be defined');
-        }
-
-        $config = $this->collectFromPath(APP_BASE_PATH, $extraKeyName);
+        $config = $this->collectFromPath($this->appBasePath, $extraKeyName);
 
         $vendorIterator = $this->factory->makeDirectoryIterator(
-            APP_BASE_PATH . DIRECTORY_SEPARATOR . 'vendor'
+            $this->appBasePath . DIRECTORY_SEPARATOR . 'vendor'
         );
 
         foreach ($vendorIterator as $fileInfo) {
