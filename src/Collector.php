@@ -9,6 +9,11 @@ declare(strict_types=1);
 
 namespace corbomite\configcollector;
 
+use function is_array;
+use function array_merge;
+use function file_exists;
+use function json_decode;
+
 class Collector
 {
     private $factory;
@@ -28,12 +33,6 @@ class Collector
     public function getPathsFromExtraKey(string $extraKeyName): array
     {
         $items = [];
-
-        $item = $this->getExtraKeyFromPath($this->appBasePath, $extraKeyName);
-
-        if ($item) {
-            $items[] = $this->appBasePath . DIRECTORY_SEPARATOR . $item;
-        }
 
         $vendorIterator = $this->factory->makeDirectoryIterator(
             $this->appBasePath . DIRECTORY_SEPARATOR . 'vendor'
@@ -61,11 +60,17 @@ class Collector
                 );
 
                 if ($thisItem) {
-                    $items[] =$providerFileInfo->getPathname() .
+                    $items[] = $providerFileInfo->getPathname() .
                         DIRECTORY_SEPARATOR .
                         $thisItem;
                 }
             }
+        }
+
+        $item = $this->getExtraKeyFromPath($this->appBasePath, $extraKeyName);
+
+        if ($item) {
+            $items[] = $this->appBasePath . DIRECTORY_SEPARATOR . $item;
         }
 
         return $items;
@@ -73,8 +78,7 @@ class Collector
 
     public function getExtraKeyAsArray(string $extraKeyName): array
     {
-        $array = $this->getExtraKeyFromPath($this->appBasePath, $extraKeyName);
-        $array = \is_array($array) ? $array : [];
+        $array = [];
 
         $vendorIterator = $this->factory->makeDirectoryIterator(
             $this->appBasePath . DIRECTORY_SEPARATOR . 'vendor'
@@ -100,18 +104,23 @@ class Collector
                     $providerFileInfo->getPathname(),
                     $extraKeyName
                 );
-                $thisArray = \is_array($thisArray) ? $thisArray : [];
+                $thisArray = is_array($thisArray) ? $thisArray : [];
 
                 $array = array_merge($array, $thisArray);
             }
         }
+
+        $local = $this->getExtraKeyFromPath($this->appBasePath, $extraKeyName);
+        $local = is_array($local) ? $local : [];
+
+        $array = array_merge($array, $local);
 
         return $array;
     }
 
     public function collect(string $extraKeyName): array
     {
-        $config = $this->collectFromPath($this->appBasePath, $extraKeyName);
+        $config = [];
 
         $vendorIterator = $this->factory->makeDirectoryIterator(
             $this->appBasePath . DIRECTORY_SEPARATOR . 'vendor'
@@ -139,6 +148,11 @@ class Collector
                 ));
             }
         }
+
+        $config = array_merge(
+            $config,
+            $this->collectFromPath($this->appBasePath, $extraKeyName)
+        );
 
         return $config;
     }
@@ -173,6 +187,6 @@ class Collector
 
         $configInclude = include $configFilePath;
 
-        return \is_array($configInclude) ? $configInclude : [];
+        return is_array($configInclude) ? $configInclude : [];
     }
 }
