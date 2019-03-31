@@ -1,26 +1,24 @@
 <?php
-declare(strict_types=1);
 
-/**
- * @author TJ Draper <tj@buzzingpixel.com>
- * @copyright 2019 BuzzingPixel, LLC
- * @license Apache-2.0
- */
+declare(strict_types=1);
 
 namespace corbomite\configcollector;
 
-use ReflectionClass;
-use DirectoryIterator;
 use Composer\Autoload\ClassLoader;
+use DirectoryIterator;
+use ReflectionClass;
+use function defined;
+use function dirname;
 
 class Factory
 {
-    public static function collector(): Collector
+    public static function collector() : Collector
     {
         if (defined('APP_BASE_PATH')) {
             return new Collector(new Factory(), APP_BASE_PATH);
         }
 
+        /** @noinspection PhpUnhandledExceptionInspection */
         $reflection = new ReflectionClass(ClassLoader::class);
 
         return new Collector(
@@ -29,17 +27,17 @@ class Factory
         );
     }
 
-    public function makeCollector(): Collector
+    public function makeCollector() : Collector
     {
         return self::collector();
     }
 
-    public static function directoryIterator(string $path): DirectoryIterator
+    public static function directoryIterator(string $path) : DirectoryIterator
     {
         return new DirectoryIterator($path);
     }
 
-    public function makeDirectoryIterator(string $path): DirectoryIterator
+    public function makeDirectoryIterator(string $path) : DirectoryIterator
     {
         return self::directoryIterator($path);
     }

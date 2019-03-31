@@ -1,36 +1,35 @@
 <?php
-declare(strict_types=1);
 
-/**
- * @author TJ Draper <tj@buzzingpixel.com>
- * @copyright 2019 BuzzingPixel, LLC
- * @license Apache-2.0
- */
+declare(strict_types=1);
 
 namespace corbomite\configcollector;
 
-use function is_array;
+use const DIRECTORY_SEPARATOR;
 use function array_merge;
 use function file_exists;
+use function file_get_contents;
+use function is_array;
 use function json_decode;
 
 class Collector
 {
+    /** @var Factory $factory */
     private $factory;
+    /** @var string $appBasePath */
     private $appBasePath;
 
     public function __construct(Factory $factory, string $appBasePath)
     {
-        $this->factory = $factory;
+        $this->factory     = $factory;
         $this->appBasePath = $appBasePath;
     }
 
-    public function __invoke(string $extraKeyName): array
+    public function __invoke(string $extraKeyName) : array
     {
         return $this->collect($extraKeyName);
     }
 
-    public function getPathsFromExtraKey(string $extraKeyName): array
+    public function getPathsFromExtraKey(string $extraKeyName) : array
     {
         $items = [];
 
@@ -59,11 +58,13 @@ class Collector
                     $extraKeyName
                 );
 
-                if ($thisItem) {
-                    $items[] = $providerFileInfo->getPathname() .
-                        DIRECTORY_SEPARATOR .
-                        $thisItem;
+                if (! $thisItem) {
+                    continue;
                 }
+
+                $items[] = $providerFileInfo->getPathname() .
+                    DIRECTORY_SEPARATOR .
+                    $thisItem;
             }
         }
 
@@ -76,7 +77,7 @@ class Collector
         return $items;
     }
 
-    public function getExtraKeyAsArray(string $extraKeyName): array
+    public function getExtraKeyAsArray(string $extraKeyName) : array
     {
         $array = [];
 
@@ -118,7 +119,7 @@ class Collector
         return $array;
     }
 
-    public function collect(string $extraKeyName): array
+    public function collect(string $extraKeyName) : array
     {
         $config = [];
 
@@ -170,12 +171,11 @@ class Collector
 
         $json = json_decode(file_get_contents($composerJsonPath), true);
 
-        return isset($json['extra'][$extraKeyName]) ?
-            $json['extra'][$extraKeyName] :
+        return $json['extra'][$extraKeyName] ??
             $default;
     }
 
-    public function collectFromPath(string $path, string $extraKeyName): array
+    public function collectFromPath(string $path, string $extraKeyName) : array
     {
         $filePath = $this->getExtraKeyFromPath($path, $extraKeyName, 'asdf');
 
