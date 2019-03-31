@@ -9,6 +9,7 @@ use function array_merge;
 use function file_exists;
 use function file_get_contents;
 use function is_array;
+use function is_file;
 use function json_decode;
 
 class Collector
@@ -181,11 +182,11 @@ class Collector
 
         $configFilePath = $path . DIRECTORY_SEPARATOR . $filePath;
 
-        if (! file_exists($configFilePath)) {
+        if (! file_exists($configFilePath) || ! is_file($configFilePath)) {
             return [];
         }
 
-        $configInclude = include $configFilePath;
+        $configInclude = @include $configFilePath;
 
         return is_array($configInclude) ? $configInclude : [];
     }
